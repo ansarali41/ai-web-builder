@@ -63,7 +63,19 @@ export async function POST(req) {
             },
         });
     } catch(e) {
-        return new Response(JSON.stringify({error: e.message || 'Code generation failed'}), {
+        console.error('[gen-ai-code] Outer error:', e?.status, e?.message);
+        console.error('[gen-ai-code] Full error:', JSON.stringify({
+            name: e?.name,
+            message: e?.message,
+            status: e?.status,
+            code: e?.code,
+            type: e?.type,
+        }));
+        return new Response(JSON.stringify({
+            error: e?.message || 'Code generation failed',
+            status: e?.status,
+            code: e?.code,
+        }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' },
         });

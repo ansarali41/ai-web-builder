@@ -47,17 +47,17 @@ export async function POST(req) {
         });
     } catch(e) {
         console.error('[ai-chat] Outer error:', e?.status, e?.message);
-        console.error('[ai-chat] Full error:', JSON.stringify({
-            name: e?.name,
-            message: e?.message,
-            status: e?.status,
-            code: e?.code,
-        }));
+        const status = e?.status || 500;
+        const isRateLimit = status === 429;
+        const friendlyMessage = isRateLimit
+            ? "AI usage limit reached. Please wait a few minutes and try again."
+            : e?.message || 'AI chat failed';
         return new Response(JSON.stringify({
-            error: e?.message || 'AI chat failed',
-            status: e?.status,
+            error: friendlyMessage,
+            status,
+            isRateLimit,
         }), {
-            status: 500,
+            status,
             headers: { 'Content-Type': 'application/json' },
         });
     }

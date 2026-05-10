@@ -64,19 +64,22 @@ export async function POST(req) {
         });
     } catch(e) {
         console.error('[gen-ai-code] Outer error:', e?.status, e?.message);
-        console.error('[gen-ai-code] Full error:', JSON.stringify({
-            name: e?.name,
-            message: e?.message,
-            status: e?.status,
-            code: e?.code,
-            type: e?.type,
-        }));
+        const status = e?.status || 500;
+        const isRateLimit = status === 429;
+        const friendlyMessage = isRateLimit
+            ? "You've reached the AI usage limit for now. Please wait a few minutes and try again, or try again tomorrow if you've hit the daily quota."
+            : status === 401
+            ? "AI provider rejected the request — the API key looks invalid. Contact the site admin."
+            : status === 403
+            ? "AI provider blocked this request (region or permissions issue)."
+            : e?.message || 'Code generation failed';
         return new Response(JSON.stringify({
-            error: e?.message || 'Code generation failed',
-            status: e?.status,
-            code: e?.code,
+            error: friendlyMessage,
+            rawError: e?.message,
+            status,
+            isRateLimit,
         }), {
-            status: 500,
+            status,
             headers: { 'Content-Type': 'application/json' },
         });
     }

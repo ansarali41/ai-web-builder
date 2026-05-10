@@ -9,6 +9,7 @@ import { useParams } from 'next/navigation';
 import { api } from '@/convex/_generated/api';
 import { Loader2Icon, Download, Code2, Eye, Sparkles, FileCode, CheckCircle2, Folder, RefreshCw } from 'lucide-react';
 import JSZip from 'jszip';
+import { showToast } from './Toast';
 
 const SandpackProvider = dynamic(() => import('@codesandbox/sandpack-react').then(mod => mod.SandpackProvider), { ssr: false });
 const SandpackLayout = dynamic(() => import('@codesandbox/sandpack-react').then(mod => mod.SandpackLayout), { ssr: false });
@@ -79,7 +80,22 @@ function CodeView() {
             if (!response.ok) {
                 const errText = await response.text();
                 console.error('[GenerateAiCode] HTTP error:', response.status, errText);
-                alert(`Code generation failed (${response.status}). Check console.`);
+                let errData = null;
+                try { errData = JSON.parse(errText); } catch {}
+                if (response.status === 429 || errData?.isRateLimit) {
+                    showToast({
+                        type: 'rate-limit',
+                        title: 'AI usage limit reached',
+                        message: errData?.error || "You've hit the AI rate limit. Please wait a few minutes and try again.",
+                        duration: 8000,
+                    });
+                } else {
+                    showToast({
+                        type: 'error',
+                        title: 'Code generation failed',
+                        message: errData?.error || `Server returned ${response.status}. Check console for details.`,
+                    });
+                }
                 return;
             }
 
@@ -115,7 +131,11 @@ function CodeView() {
             }
 
             if (serverError && !finalData) {
-                alert(`Code generation failed: ${serverError}\n\nCheck the browser console for details.`);
+                showToast({
+                    type: 'error',
+                    title: 'Code generation failed',
+                    message: serverError,
+                });
                 return;
             }
 

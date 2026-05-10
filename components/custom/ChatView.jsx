@@ -12,6 +12,7 @@ import { useContext, useEffect, useState, useCallback, memo, useRef } from 'reac
 import { useMutation } from 'convex/react';
 import Prompt from '@/data/Prompt';
 import ReactMarkdown from 'react-markdown';
+import { showToast } from './Toast';
 
 const ACTIVITY_TYPES = {
     analyzing: { icon: Eye, label: 'Analyzing request' },
@@ -124,6 +125,27 @@ function ChatView() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt: PROMPT }),
             });
+
+            if (!response.ok) {
+                const errText = await response.text();
+                let errData = null;
+                try { errData = JSON.parse(errText); } catch {}
+                if (response.status === 429 || errData?.isRateLimit) {
+                    showToast({
+                        type: 'rate-limit',
+                        title: 'AI usage limit reached',
+                        message: errData?.error || 'Please wait a few minutes and try again.',
+                        duration: 8000,
+                    });
+                } else {
+                    showToast({
+                        type: 'error',
+                        title: 'Chat failed',
+                        message: errData?.error || `Server returned ${response.status}.`,
+                    });
+                }
+                return;
+            }
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder();

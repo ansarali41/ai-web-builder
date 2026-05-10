@@ -46,11 +46,19 @@ export async function POST(request) {
             },
         });
     } catch (error) {
+        console.error('[enhance-prompt] Outer error:', error?.status, error?.message);
+        const status = error?.status || 500;
+        const isRateLimit = status === 429;
+        const friendlyMessage = isRateLimit
+            ? "AI usage limit reached. Please wait a few minutes and try again."
+            : error?.message || 'Prompt enhancement failed';
         return new Response(JSON.stringify({
-            error: error.message,
-            success: false
+            error: friendlyMessage,
+            status,
+            isRateLimit,
+            success: false,
         }), {
-            status: 500,
+            status,
             headers: { 'Content-Type': 'application/json' },
         });
     }

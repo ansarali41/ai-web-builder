@@ -8,6 +8,7 @@ import { api } from '@/convex/_generated/api';
 import { useRouter } from 'next/navigation';
 import ChatHistory from './ChatHistory';
 import { addToHistory } from '@/lib/chatHistory';
+import { showToast } from './Toast';
 
 function Hero() {
     const [userInput, setUserInput] = useState('');
@@ -34,6 +35,27 @@ function Hero() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt: userInput }),
             });
+
+            if (!response.ok) {
+                const errText = await response.text();
+                let errData = null;
+                try { errData = JSON.parse(errText); } catch {}
+                if (response.status === 429 || errData?.isRateLimit) {
+                    showToast({
+                        type: 'rate-limit',
+                        title: 'AI usage limit reached',
+                        message: errData?.error || 'Please wait a few minutes and try again.',
+                        duration: 8000,
+                    });
+                } else {
+                    showToast({
+                        type: 'error',
+                        title: 'Enhance failed',
+                        message: errData?.error || `Server returned ${response.status}.`,
+                    });
+                }
+                return;
+            }
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder();

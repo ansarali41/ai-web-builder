@@ -7,10 +7,10 @@ export default defineSchema({
         email: v.optional(v.string()),
         picture: v.optional(v.string()),
         uid: v.optional(v.string()),
-        isAnonymous: v.optional(v.boolean())
+        isAnonymous: v.optional(v.boolean()),
     }),
-    workspace:defineTable({
-        messages:v.any(),
-        fileData:v.optional(v.any()),
-    })
+    workspace: defineTable({
+        messages: v.any(),
+        fileData: v.optional(v.any()),
+    }),
 });

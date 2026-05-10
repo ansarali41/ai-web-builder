@@ -1,6 +1,8 @@
 import getOpenAI, { enhancePromptConfig } from "@/configs/AiModel";
 import Prompt from "@/data/Prompt";
 
+export const maxDuration = 60;
+
 export async function POST(request) {
     try {
         const { prompt } = await request.json();

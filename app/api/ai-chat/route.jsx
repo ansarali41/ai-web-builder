@@ -1,6 +1,8 @@
 import getOpenAI, { chatConfig } from "@/configs/AiModel";
 import Prompt from "@/data/Prompt";
 
+export const maxDuration = 60;
+
 export async function POST(req) {
     const {prompt} = await req.json();
 
